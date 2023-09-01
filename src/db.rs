@@ -1,13 +1,9 @@
-use std::sync::Arc;
-
+use crate::grpc::movie::MovieItem;
 use dotenv::dotenv;
 use futures::StreamExt;
-use mongodb::bson::{self, Document};
-use mongodb::bson::{doc, oid::ObjectId, Bson};
-use mongodb::error::Result as MongoResult;
-use mongodb::{options::ClientOptions, Client, Collection, Database};
-
-use crate::grpc::movie::MovieItem;
+use mongodb::bson::{doc, Document};
+use mongodb::{options::ClientOptions, Client, Collection};
+use tonic::Status;
 
 #[derive(Clone, Debug)]
 pub struct DB {
@@ -15,105 +11,124 @@ pub struct DB {
 }
 
 impl DB {
-    pub async fn init() -> Result<Self, mongodb::error::Error> {
+    pub async fn init() -> Result<Self, Status> {
         let client = DB::create_mongodb_client().await?;
         Ok(Self { client })
     }
 
-    async fn create_mongodb_client() -> mongodb::error::Result<Client> {
+    async fn create_mongodb_client() -> Result<Client, Status> {
         dotenv().ok();
-        let mongodb_url = dotenv::var("DB_URL").expect("mongodb url not found");
-        let mut client_options = ClientOptions::parse(mongodb_url).await?;
-        client_options.app_name = Some("cinema".to_string());
-        Client::with_options(client_options)
+        let mongodb_url = dotenv::var("DB_URL").map_err(|dotenv_error| {
+            Status::internal(format!("failed to get mongo DB URL: {:?}", dotenv_error))
+        })?;
+        let mongodb_name = dotenv::var("DB_NAME").map_err(|dotenv_error| {
+            Status::internal(format!("failed to get mongo DB name: {:?}", dotenv_error))
+        })?;
+        let mut client_options =
+            ClientOptions::parse(mongodb_url)
+                .await
+                .map_err(|url_parse_error| {
+                    Status::internal(format!(
+                        "Failed to parse MongoDB URL: {:?}",
+                        url_parse_error
+                    ))
+                })?;
+        client_options.app_name = Some(mongodb_name);
+        Ok(
+            Client::with_options(client_options).map_err(|client_error| {
+                Status::internal(format!("Failed to create Mongo client: {:?}", client_error))
+            })?,
+        )
     }
 
-    fn get_collection(&self) -> Collection<Document> {
-        let mongodb_name = dotenv::var("DB_NAME").expect("mongodb name not found");
-        let mongodb_collection = dotenv::var("COLLECTION").expect("mongodb collection not found");
-        self.client
+    fn get_collection(&self) -> Result<Collection<Document>, Status> {
+        let mongodb_name = dotenv::var("DB_NAME").map_err(|dotenv_error| {
+            Status::internal(format!("failed to get mongo DB name: {:?}", dotenv_error))
+        })?;
+        let mongodb_collection = dotenv::var("COLLECTION").map_err(|dotenv_error| {
+            Status::internal(format!(
+                "failed to get mongo collection: {:?}",
+                dotenv_error
+            ))
+        })?;
+        Ok(self
+            .client
             .database(mongodb_name.as_str())
-            .collection(mongodb_collection.as_str())
+            .collection(mongodb_collection.as_str()))
     }
 
-    fn convert_db_document_to_movie_item(&self, doc: &Document) -> MongoResult<MovieItem> {
+    fn convert_db_document_to_movie_item(&self, doc: &Document) -> Result<MovieItem, Status> {
         let id = doc
             .get_object_id("_id")
-            .or_else(|_| {
-                Err(mongodb::error::ErrorKind::Custom(Arc::new(
-                    "Missing '_id' field in document",
-                )))
-            })?
-            .to_hex()
-            .parse::<i32>()
-            .map_err(|_| {
-                mongodb::error::ErrorKind::Custom(Arc::new("Failed to parse 'id' field"))
-            })?;
+            .map_err(|_| Status::internal("Missing _id field in document"))?
+            .to_hex();
 
         let title = doc
-            .get_str("TITLE")
-            .or_else(|_| {
-                Err(mongodb::error::ErrorKind::Custom(Arc::new(
-                    "Missing 'TITLE' field in document",
-                )))
-            })?
+            .get_str("title")
+            .map_err(|e| Status::internal(format!("Missing TITLE field in document: {:?}", e)))?
             .to_owned();
 
         let year = doc
-            .get_i32("YEAR")
-            .or_else(|_| {
-                Err(mongodb::error::ErrorKind::Custom(Arc::new(
-                    "Missing 'YEAR' field in document",
-                )))
-            })?
+            .get_i32("year")
+            .map_err(|_| Status::internal("Missing YEAR field in document"))?
             .to_owned();
 
         let genre = doc
-            .get_str("GENRE")
-            .or_else(|_| {
-                Err(mongodb::error::ErrorKind::Custom(Arc::new(
-                    "Missing 'GENRE' field in document",
-                )))
-            })?
+            .get_str("genre")
+            .map_err(|_| Status::internal("Missing GENRE field in document"))?
             .to_string();
 
         Ok(MovieItem {
+            id,
             title,
             year,
             genre,
         })
     }
 
-    pub async fn get_movies(&self) -> MongoResult<Vec<MovieItem>> {
-        let mut cursor = self.get_collection().find(None, None).await?;
+    pub async fn get_movies(&self) -> Result<Vec<MovieItem>, Status> {
+        let mut cursor = self
+            .get_collection()?
+            .find(None, None)
+            .await
+            .map_err(|fetch_error| {
+                Status::internal(format!("could not find documents: {:?}", fetch_error))
+            })?;
 
         let mut result: Vec<MovieItem> = Vec::new();
         while let Some(doc) = cursor.next().await {
-            result.push(self.convert_db_document_to_movie_item(&doc?)?);
+            result.push(self.convert_db_document_to_movie_item(&doc.map_err(
+                |cursor_error| {
+                    Status::internal(format!("failed to get document: {:?}", cursor_error))
+                },
+            )?)?);
         }
         Ok(result)
     }
 
-    pub async fn create_movie(&self, movie: &MovieItem) -> Result<MovieItem, tonic::Status> {
+    pub async fn create_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status> {
         let record = doc! {
             "title": movie.title.clone(),
             "year": movie.year,
             "genre": movie.genre.clone(),
         };
-        match self.get_collection().insert_one(record, None).await {
+        match self.get_collection()?.insert_one(record, None).await {
             Ok(inserted_record) => {
                 if let Some(inserted_id) = inserted_record.inserted_id.as_object_id() {
-                    println!("{:?}", inserted_id);
                     Ok(MovieItem {
+                        id: inserted_id.to_string(),
                         title: movie.title.clone(),
                         year: movie.year.clone(),
                         genre: movie.genre.clone(),
                     })
                 } else {
-                    Err(tonic::Status::internal("Failed to get movie ID"))
+                    Err(Status::internal("Failed to get movie ID"))
                 }
             }
-            Err(e) => Err(tonic::Status::internal(format!("Failed to create new movie: {:?}", e))),
+            Err(insertion_error) => Err(Status::internal(format!(
+                "Failed to create new movie: {:?}",
+                insertion_error
+            ))),
         }
     }
 }

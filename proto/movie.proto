@@ -2,9 +2,10 @@ syntax = "proto3";
 package movie;
 
 message MovieItem {
-  string title = 1;
-  int32 year = 2;
-  string genre = 3;
+  string id = 1;
+  string title = 2;
+  int32 year = 3;
+  string genre = 4;
 }
 
 message MovieRequest {

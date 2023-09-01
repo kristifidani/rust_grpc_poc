@@ -12,17 +12,17 @@ Before you begin, ensure you have met the following requirements:
 - **Protocol Buffers** compiler installed on the local machine. You can download it from the official [GitHub repository](https://github.com/protocolbuffers/protobuf/releases/tag/v24.2).
 
 ### Build
-- Build the project with: `cargo build`
-- Run the project with: `cargo run`
+
+- Build the project: `cargo build`
+- Run the project: `cargo run`
 
 ### Test
 
-- Run unit-tests with: `cargo test --bin movies-rust-grpc -- --nocapture`
+- Run unit-tests: `cargo test --bin movies-rust-grpc -- --nocapture`
 
 ### Usage
 
-After running the project with `cargo run`, interact with the API using either of the following: 
- 
-- Install [grpcurl](https://github.com/fullstorydev/grpcurl/releases) retreive a list of all movies using:   
-`grpcurl -plaintext -import-path proto -proto movie.proto 127.0.0.1:8080 movie.Movie/GetMovies`.
-- Alternatively use [Postman](https://www.postman.com/).
+1. Start docker containers: `docker-compose up -d`
+1. Run the project: `cargo run`
+1. Create movie: `cd script/ && ./add_movie.sh`
+1. Fetch movies: `cd script/ && ./fetch_movies.sh`

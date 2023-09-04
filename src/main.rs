@@ -1,3 +1,4 @@
+mod config;
 mod db;
 mod grpc;
 mod movie;
@@ -8,11 +9,9 @@ use db::DB;
 use std::env;
 use tonic::transport::Server;
 use tonic_health::server::health_reporter;
-use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().ok();
     let db = DB::init().await?;
     let (mut health_reporter, health_service) = health_reporter();
     health_reporter

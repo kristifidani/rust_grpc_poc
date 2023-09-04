@@ -1,18 +1,35 @@
+use crate::config::{load_configuration, Config};
 use crate::grpc::movie::MovieItem;
 use tokio_postgres::{Client, NoTls};
 use tonic::Status;
 
+fn get_configuration() -> Result<Config, Status> {
+    match load_configuration() {
+        Ok(env_vars) => Ok(env_vars),
+        Err(e) => {
+            let custom_error = format!(
+                "This program requires environment variables to be defined. \n
+        Required variables: \n
+        POSTGRES URL -> url for connecting to the database \n
+        POSTGRES DATABASE NAME -> database/table name for storing data \n
+        The following error occured while loading environment variables: {:?} \n",
+                e
+            );
+            Err(Status::internal(custom_error))
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct DB {
+    config: Config,
     pub client: Client,
 }
 
 impl DB {
     pub async fn init() -> Result<Self, Status> {
-        let db_url = dotenv::var("DB_URL").map_err(|dotenv_error| {
-            Status::internal(format!("failed to get url: {:?}", dotenv_error))
-        })?;
-        let (client, connection) = tokio_postgres::connect(db_url.as_str(), NoTls)
+        let config = get_configuration()?;
+        let (client, connection) = tokio_postgres::connect(config.postgres_url.as_str(), NoTls)
             .await
             .map_err(|db_connection_error| {
                 Status::internal(format!(
@@ -22,15 +39,11 @@ impl DB {
             })?;
         tokio::spawn(connection);
 
-        Self::create_database(&client).await?;
-        Ok(Self { client })
+        Self::create_database(&client, &config).await?;
+        Ok(Self { config, client })
     }
 
-    async fn create_database(client: &Client) -> Result<(), Status> {
-        let db_name = dotenv::var("DB_NAME").map_err(|dotenv_error| {
-            Status::internal(format!("failed to get db name: {:?}", dotenv_error))
-        })?;
-
+    async fn create_database(client: &Client, config: &Config) -> Result<(), Status> {
         let create_table_sql = format!(
             "CREATE TABLE IF NOT EXISTS {} (
               id SERIAL PRIMARY KEY,
@@ -38,7 +51,7 @@ impl DB {
               year INT NOT NULL,
               genre TEXT NOT NULL
           )",
-            db_name
+            config.postgres_db_name
         );
 
         client
@@ -47,16 +60,16 @@ impl DB {
             .map_err(|db_error| {
                 Status::internal(format!(
                     "failed to create table in database {}, {:?}",
-                    db_name, db_error
+                    config.postgres_db_name, db_error
                 ))
             })
     }
 
     pub async fn fetch_movies(&self) -> Result<Vec<MovieItem>, Status> {
-        let query = "SELECT * FROM cinema";
+        let query = format!("SELECT * FROM {}", self.config.postgres_db_name);
         let rows = self
             .client
-            .query(query, &[])
+            .query(query.as_str(), &[])
             .await
             .map_err(|e| Status::internal(format!("Failed to execute SQL query: {:?}", e)))?;
 
@@ -76,14 +89,10 @@ impl DB {
     }
 
     pub async fn create_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status> {
-        let db_name = dotenv::var("DB_NAME").map_err(|dotenv_error| {
-            Status::internal(format!("failed to get db name: {:?}", dotenv_error))
-        })?;
-
         let statement = self.client
           .prepare(&format!(
               "INSERT INTO {} (title, year, genre) VALUES ($1, $2, $3) RETURNING id, title, year, genre",
-              db_name
+              self.config.postgres_db_name
           ))
           .await
           .map_err(|db_error| {

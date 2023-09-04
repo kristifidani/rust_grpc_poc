@@ -8,9 +8,11 @@ use db::DB;
 use std::env;
 use tonic::transport::Server;
 use tonic_health::server::health_reporter;
+use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv().ok();
     let db = DB::init().await?;
     let (mut health_reporter, health_service) = health_reporter();
     health_reporter
@@ -20,7 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Server::builder()
         .accept_http1(true)
         .add_service(health_service)
-        .add_service(tonic_web::enable(MovieServer::new(MovieService::new(db.into()))))
+        .add_service(tonic_web::enable(MovieServer::new(MovieService::new(db))))
         .serve(format!("0.0.0.0:{}", env::var("PORT").unwrap_or("8080".to_string())).parse()?)
         .await?;
 

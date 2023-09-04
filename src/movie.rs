@@ -17,8 +17,8 @@ impl Movie for MovieService {
     async fn get_movies(
         &self,
         _request: Request<MovieRequest>,
-    ) -> Result<Response<MovieResponse>, tonic::Status> {
-        let movies = self.db.get_movies().await?;
+    ) -> Result<Response<MovieResponse>, Status> {
+        let movies = self.db.fetch_movies().await?;
         let reply = MovieResponse { movies };
         Ok(Response::new(reply))
     }
@@ -47,12 +47,8 @@ mod tests {
 
     #[tokio::test]
     async fn get_movies_utest() {
-        let movie_service = MovieService::new(
-            db::DB::init()
-                .await
-                .expect("failed to initialize mongodb")
-                .into(),
-        );
+        let movie_service =
+            MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
         let request = Request::new(MovieRequest {});
         let result = movie_service.get_movies(request).await;
 
@@ -62,14 +58,10 @@ mod tests {
 
     #[tokio::test]
     async fn add_movie_utest() {
-        let movie_service = MovieService::new(
-            db::DB::init()
-                .await
-                .expect("failed to initialize mongodb")
-                .into(),
-        );
+        let movie_service =
+            MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
         let new_movie = MovieItem {
-            id: "1".to_string(),
+            id: 1,
             title: "New Movie Title".to_string(),
             year: 2023,
             genre: "Action".to_string(),

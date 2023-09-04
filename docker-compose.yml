@@ -1,12 +1,13 @@
 version: '3.8'
 services:
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb-cont
-    ports:
-      - '27017:27017'
-    volumes:
-      - mongodb_data_cont:/data/db
-
+    postgres:
+        image: postgres:latest
+        environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=postgres
+        ports:
+          - '5432:5432'
+        volumes:
+          - postgres:/data/postgres
 volumes:
-  mongodb_data_cont:
+  postgres:

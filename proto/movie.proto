@@ -15,7 +15,12 @@ message MovieResponse {
   repeated MovieItem movies = 1;
 }
 
+message EditMovieResponse {
+  MovieItem movie = 1;
+}
+
 service Movie {
   rpc GetMovies (MovieRequest) returns (MovieResponse);
   rpc AddMovie (MovieItem) returns (MovieResponse);
+  rpc EditMovie (MovieItem) returns (EditMovieResponse);
 }

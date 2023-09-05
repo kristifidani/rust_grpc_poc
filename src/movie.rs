@@ -1,5 +1,7 @@
 use crate::db::DB;
-use crate::grpc::movie::{movie_server::Movie, MovieItem, MovieRequest, MovieResponse};
+use crate::grpc::movie::{
+    movie_server::Movie, EditMovieResponse, MovieItem, MovieRequest, MovieResponse,
+};
 use tonic::{Request, Response, Status};
 
 pub struct MovieService {
@@ -31,6 +33,18 @@ impl Movie for MovieService {
         let movie = self.db.create_movie(&new_movie).await?;
         let reply = MovieResponse {
             movies: vec![movie],
+        };
+        Ok(Response::new(reply))
+    }
+
+    async fn edit_movie(
+        &self,
+        request: Request<MovieItem>,
+    ) -> Result<Response<EditMovieResponse>, Status> {
+        let update_movie = request.into_inner();
+        let eddited_movie = self.db.update_movie(&update_movie).await?;
+        let reply = EditMovieResponse {
+            movie: Some(eddited_movie),
         };
         Ok(Response::new(reply))
     }
@@ -69,6 +83,24 @@ mod tests {
         let request = Request::new(new_movie.clone());
 
         let result = movie_service.add_movie(request).await;
+
+        println!("result: {:?}", result);
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn edit_movie_utest() {
+        let movie_service =
+            MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
+        let new_movie = MovieItem {
+            id: 1,
+            title: "Edited Movie Title".to_string(),
+            year: 2024,
+            genre: "Drama".to_string(),
+        };
+        let request = Request::new(new_movie.clone());
+
+        let result = movie_service.edit_movie(request).await;
 
         println!("result: {:?}", result);
         assert!(result.is_ok());

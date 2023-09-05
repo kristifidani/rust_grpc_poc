@@ -26,3 +26,4 @@ Before you begin, ensure you have met the following requirements:
 1. Run the project: `cargo run`
 1. Create movie: `cd script/ && ./add_movie.sh`
 1. Fetch movies: `cd script/ && ./fetch_movies.sh`
+1. Edit movies: `cd script/ && ./edit_movie.sh`

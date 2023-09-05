@@ -117,4 +117,37 @@ impl DB {
             genre: inserted_row.get("genre"),
         })
     }
+
+    pub async fn update_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status> {
+        let statement = self.client
+          .prepare(&format!(
+              "UPDATE {} SET title = $1, year = $2, genre = $3 WHERE id = $4 RETURNING id, title, year, genre",
+              self.config.postgres_db_name
+          ))
+          .await
+          .map_err(|db_error| {
+              Status::internal(format!(
+                  "failed to prepare UPDATE statement: {:?}",
+                  db_error
+              ))
+          })?;
+
+        let updated_row = self
+            .client
+            .query_one(
+                &statement,
+                &[&movie.title, &movie.year, &movie.genre, &movie.id],
+            )
+            .await
+            .map_err(|db_error| {
+                Status::internal(format!("failed to update movie: {:?}", db_error))
+            })?;
+
+        Ok(MovieItem {
+            id: updated_row.get("id"),
+            title: updated_row.get("title"),
+            year: updated_row.get("year"),
+            genre: updated_row.get("genre"),
+        })
+    }
 }

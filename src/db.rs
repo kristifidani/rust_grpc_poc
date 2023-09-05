@@ -150,4 +150,30 @@ impl DB {
             genre: updated_row.get("genre"),
         })
     }
+
+    pub async fn delete_movie(&self, id: i32) -> Result<i32, Status> {
+        let statement = self
+            .client
+            .prepare(&format!(
+                "DELETE FROM {} WHERE id = $1 RETURNING id",
+                self.config.postgres_db_name
+            ))
+            .await
+            .map_err(|db_error| {
+                Status::internal(format!(
+                    "failed to prepare DELETE statement: {:?}",
+                    db_error
+                ))
+            })?;
+
+        let deleted_row = self
+            .client
+            .query_one(&statement, &[&id])
+            .await
+            .map_err(|db_error| {
+                Status::internal(format!("failed to delete movie: {:?}", db_error))
+            })?;
+
+        Ok(deleted_row.get("id"))
+    }
 }

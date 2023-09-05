@@ -8,10 +8,10 @@ message MovieItem {
   string genre = 4;
 }
 
-message MovieRequest {
+message GetMovieRequest {
 }
 
-message MovieResponse {
+message GetMovieResponse {
   repeated MovieItem movies = 1;
 }
 
@@ -19,8 +19,13 @@ message EditMovieResponse {
   MovieItem movie = 1;
 }
 
+message DeleteMovieRR{
+  int32 id = 1;
+}
+
 service Movie {
-  rpc GetMovies (MovieRequest) returns (MovieResponse);
-  rpc AddMovie (MovieItem) returns (MovieResponse);
+  rpc GetMovies (GetMovieRequest) returns (GetMovieResponse);
+  rpc AddMovie (MovieItem) returns (GetMovieResponse);
   rpc EditMovie (MovieItem) returns (EditMovieResponse);
+  rpc DeleteMovie (DeleteMovieRR) returns (DeleteMovieRR);
 }

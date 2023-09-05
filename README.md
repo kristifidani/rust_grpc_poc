@@ -2,7 +2,7 @@
 
 ### Introduction
 
-This Rust project showcases the use of **gRPC** to build an API for movie services. It defines a gRPC service for retrieving a list of movies, and it includes a sample implementation for this service.
+This Rust project showcases the use of **gRPC** to build an API for movie services. It defines a gRPC service for retrieving a list of movies, creating a movie, deleting and updating movies. Also it includes sample implementations for these services.
 
 ## Prerequisites
 
@@ -26,4 +26,5 @@ Before you begin, ensure you have met the following requirements:
 1. Run the project: `cargo run`
 1. Create movie: `cd script/ && ./add_movie.sh`
 1. Fetch movies: `cd script/ && ./fetch_movies.sh`
-1. Edit movies: `cd script/ && ./edit_movie.sh`
+1. Edit movie: `cd script/ && ./edit_movie.sh`
+1. Delete movie: `cd script/ && ./delete_movie.sh`

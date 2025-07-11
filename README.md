@@ -11,14 +11,14 @@ Before you begin, ensure you have met the following requirements:
 - **Rust** and **Cargo** installed. Check the official [website](https://www.rust-lang.org/learn/get-started).
 - **Protocol Buffers** compiler installed on the local machine. You can download it from the official [GitHub repository](https://github.com/protocolbuffers/protobuf/releases/tag/v24.2).
 
-### Build
+### Build and Run
 
 - Build the project: `cargo build`
 - Run the project: `cargo run`
 
-### Test
-
-- Run unit-tests: `cargo test --bin movies-rust-grpc -- --nocapture`
+Make sure you have set the `.env` variables:
+* DB_URL=`postgres://postgres:postgres@localhost:5432/postgres`
+* DB_NAME=`movies`
 
 ### Usage
 

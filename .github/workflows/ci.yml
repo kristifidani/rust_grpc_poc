@@ -74,3 +74,18 @@ jobs:
         run: |
           rustup component add clippy
           cargo clippy --all-targets --all-features --color always -- -D warnings
+
+  unit-tests-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "21.12"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run unit tests
+        run: cargo test --lib -- --show-output

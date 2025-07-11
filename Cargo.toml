@@ -15,3 +15,6 @@ authors = ["Kristi Fidani"]
 [workspace.dependencies]
 dotenv = { version = "0.14", default-features = false }
 tokio = { version = "1.32", features = ["macros", "rt-multi-thread"] }
+serial_test = { version = "3.2", default-features = false, features = [
+    "file_locks",
+] }

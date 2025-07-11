@@ -22,12 +22,17 @@ tokio-postgres = "0.7.10"
 # workspace deps
 dotenv = { workspace = true }
 tokio = { workspace = true }
+serial_test = { workspace = true }
 
 [build-dependencies]
 tonic-build = { version = "0.12", default-features = false, features = [
     "transport",
     "prost",
 ] }
+
+[package.metadata.cargo-machete]
+# these are not used directly but are needed for the `Trait` implementations
+ignored = ["prost", "prost-types"]
 
 [[bin]]
 name = "movie-grpc-service"

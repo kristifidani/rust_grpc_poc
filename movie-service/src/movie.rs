@@ -1,22 +1,16 @@
-use crate::db::DB;
+use crate::db::MovieRepoImpl;
 use crate::grpc::movie::{
     DeleteMovieRr, EditMovieResponse, GetMovieRequest, GetMovieResponse, MovieItem,
     movie_server::Movie,
 };
 use tonic::{Request, Response, Status};
 
-pub struct MovieService {
-    db: DB,
-}
-
-impl MovieService {
-    pub fn new(db: DB) -> Self {
-        Self { db }
-    }
+pub struct MovieService<M> {
+    pub db: M,
 }
 
 #[tonic::async_trait]
-impl Movie for MovieService {
+impl<M: MovieRepoImpl> Movie for MovieService<M> {
     async fn get_movies(
         &self,
         _request: Request<GetMovieRequest>,

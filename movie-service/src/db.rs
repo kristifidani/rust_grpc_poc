@@ -1,42 +1,34 @@
-use crate::config::{Config, load_configuration};
 use crate::grpc::movie::MovieItem;
 use tokio_postgres::{Client, NoTls};
 use tonic::Status;
 
-fn get_configuration() -> Result<Config, Status> {
-    match load_configuration() {
-        Ok(env_vars) => Ok(env_vars),
-        Err(e) => {
-            let custom_error = format!(
-                "This program requires environment variables to be defined. \n
-        Required variables: \n
-        POSTGRES URL -> url for connecting to the database \n
-        POSTGRES DATABASE NAME -> database/table name for storing data \n
-        The following error occured while loading environment variables: {:?} \n",
-                e
-            );
-            Err(Status::internal(custom_error))
-        }
-    }
+const DB_NAME: &str = "movies";
+
+#[cfg_attr(feature = "mock", mockall::automock)]
+#[async_trait::async_trait]
+pub trait MovieRepoImpl: Send + Sync + 'static {
+    async fn fetch_movies(&self) -> Result<Vec<MovieItem>, Status>;
+    async fn create_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status>;
+    async fn update_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status>;
+    async fn delete_movie(&self, id: i32) -> Result<i32, Status>;
 }
 
 #[derive(Debug)]
-pub struct DB {
-    config: Config,
-    pub client: Client,
+pub struct MovieRepo {
+    client: Client,
 }
 
-impl DB {
-    pub async fn init() -> Result<Self, Status> {
-        let config = get_configuration()?;
-        let (client, connection) = tokio_postgres::connect(config.postgres_url.as_str(), NoTls)
-            .await
-            .map_err(|db_connection_error| {
-                Status::internal(format!(
-                    "failed to initialize db: {:?}",
-                    db_connection_error
-                ))
-            })?;
+impl MovieRepo {
+    pub async fn init(url: &str) -> Result<Self, Status> {
+        let (client, connection) =
+            tokio_postgres::connect(url, NoTls)
+                .await
+                .map_err(|db_connection_error| {
+                    Status::internal(format!(
+                        "failed to initialize db: {:?}",
+                        db_connection_error
+                    ))
+                })?;
 
         // Spawn the connection to run in the background
         tokio::spawn(connection);
@@ -47,18 +39,15 @@ impl DB {
             .await
             .map_err(|err| Status::internal(format!("DB ping failed: {:?}", err)))?;
 
-        println!(
-            "✅ Successfully connected to PostgreSQL at {}",
-            config.postgres_url
-        );
+        println!("✅ Successfully connected to PostgreSQL at {}", url);
 
         // Create database
-        Self::create_database(&client, &config).await?;
+        Self::create_database(&client).await?;
 
-        Ok(Self { config, client })
+        Ok(Self { client })
     }
 
-    async fn create_database(client: &Client, config: &Config) -> Result<(), Status> {
+    async fn create_database(client: &Client) -> Result<(), Status> {
         let create_table_sql = format!(
             "CREATE TABLE IF NOT EXISTS {} (
               id SERIAL PRIMARY KEY,
@@ -66,7 +55,7 @@ impl DB {
               year INT NOT NULL,
               genre TEXT NOT NULL
           )",
-            config.postgres_db_name
+            DB_NAME
         );
 
         client
@@ -75,13 +64,16 @@ impl DB {
             .map_err(|db_error| {
                 Status::internal(format!(
                     "failed to create table in database {}, {:?}",
-                    config.postgres_db_name, db_error
+                    DB_NAME, db_error
                 ))
             })
     }
+}
 
-    pub async fn fetch_movies(&self) -> Result<Vec<MovieItem>, Status> {
-        let query = format!("SELECT * FROM {}", self.config.postgres_db_name);
+#[async_trait::async_trait]
+impl MovieRepoImpl for MovieRepo {
+    async fn fetch_movies(&self) -> Result<Vec<MovieItem>, Status> {
+        let query = format!("SELECT * FROM {}", DB_NAME);
         let rows = self
             .client
             .query(query.as_str(), &[])
@@ -103,11 +95,11 @@ impl DB {
         Ok(movies)
     }
 
-    pub async fn create_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status> {
+    async fn create_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status> {
         let statement = self.client
           .prepare(&format!(
               "INSERT INTO {} (title, year, genre) VALUES ($1, $2, $3) RETURNING id, title, year, genre",
-              self.config.postgres_db_name
+              DB_NAME
           ))
           .await
           .map_err(|db_error| {
@@ -133,11 +125,11 @@ impl DB {
         })
     }
 
-    pub async fn update_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status> {
+    async fn update_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status> {
         let statement = self.client
           .prepare(&format!(
               "UPDATE {} SET title = $1, year = $2, genre = $3 WHERE id = $4 RETURNING id, title, year, genre",
-              self.config.postgres_db_name
+              DB_NAME
           ))
           .await
           .map_err(|db_error| {
@@ -166,12 +158,12 @@ impl DB {
         })
     }
 
-    pub async fn delete_movie(&self, id: i32) -> Result<i32, Status> {
+    async fn delete_movie(&self, id: i32) -> Result<i32, Status> {
         let statement = self
             .client
             .prepare(&format!(
                 "DELETE FROM {} WHERE id = $1 RETURNING id",
-                self.config.postgres_db_name
+                DB_NAME
             ))
             .await
             .map_err(|db_error| {

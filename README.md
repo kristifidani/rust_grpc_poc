@@ -18,7 +18,6 @@ Before you begin, ensure you have met the following requirements:
 
 Make sure you have set the `.env` variables:
 * DB_URL=`postgres://postgres:postgres@localhost:5432/postgres`
-* DB_NAME=`movies`
 
 ### Usage
 

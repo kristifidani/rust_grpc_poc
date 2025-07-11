@@ -20,7 +20,7 @@ tonic = { version = "0.12", default-features = false, features = [
 tokio-postgres = "0.7.10"
 
 # workspace deps
-dotenv = { workspace = true }
+dotenvy = { workspace = true }
 tokio = { workspace = true }
 
 [build-dependencies]

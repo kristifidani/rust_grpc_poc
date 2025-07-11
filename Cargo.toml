@@ -13,5 +13,5 @@ edition = "2024"
 authors = ["Kristi Fidani"]
 
 [workspace.dependencies]
-dotenv = { version = "0.14", default-features = false }
+dotenvy = { version = "0.15", default-features = false }
 tokio = { version = "1.32", features = ["macros", "rt-multi-thread"] }

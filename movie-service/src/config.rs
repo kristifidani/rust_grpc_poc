@@ -1,4 +1,4 @@
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use std::error::Error;
 
 #[derive(Debug, Clone)]
@@ -10,8 +10,8 @@ pub struct Config {
 pub fn load_configuration() -> Result<Config, Box<dyn Error>> {
     dotenv().ok();
 
-    let postgres_url = dotenv::var("DB_URL");
-    let postgres_db_name = dotenv::var("DB_NAME");
+    let postgres_url = dotenvy::var("DB_URL");
+    let postgres_db_name = dotenvy::var("DB_NAME");
 
     if postgres_url.is_err() && postgres_db_name.is_err() {
         Err("Postgres URL and NAME not found".to_string())?

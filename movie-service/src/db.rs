@@ -1,4 +1,4 @@
-use crate::config::{load_configuration, Config};
+use crate::config::{Config, load_configuration};
 use crate::grpc::movie::MovieItem;
 use tokio_postgres::{Client, NoTls};
 use tonic::Status;
@@ -37,9 +37,24 @@ impl DB {
                     db_connection_error
                 ))
             })?;
+
+        // Spawn the connection to run in the background
         tokio::spawn(connection);
 
+        // Ping the database with a basic query to verify the connection
+        client
+            .query_one("SELECT 1", &[])
+            .await
+            .map_err(|err| Status::internal(format!("DB ping failed: {:?}", err)))?;
+
+        println!(
+            "✅ Successfully connected to PostgreSQL at {}",
+            config.postgres_url
+        );
+
+        // Create database
         Self::create_database(&client, &config).await?;
+
         Ok(Self { config, client })
     }
 

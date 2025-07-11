@@ -11,20 +11,20 @@ Before you begin, ensure you have met the following requirements:
 - **Rust** and **Cargo** installed. Check the official [website](https://www.rust-lang.org/learn/get-started).
 - **Protocol Buffers** compiler installed on the local machine. You can download it from the official [GitHub repository](https://github.com/protocolbuffers/protobuf/releases/tag/v24.2).
 
-### Build
+### Build and Run
 
 - Build the project: `cargo build`
 - Run the project: `cargo run`
 
-### Test
-
-- Run unit-tests: `cargo test --bin movies-rust-grpc -- --nocapture`
+Make sure you have set the `.env` variables:
+* DB_URL=`postgres://postgres:postgres@localhost:5432/postgres`
+* DB_NAME=`movies`
 
 ### Usage
 
 1. Start docker containers: `docker-compose up -d`
 1. Run the project: `cargo run`
-1. Create movie: `cd script/ && ./add_movie.sh`
-1. Fetch movies: `cd script/ && ./fetch_movies.sh`
-1. Edit movie: `cd script/ && ./edit_movie.sh`
-1. Delete movie: `cd script/ && ./delete_movie.sh`
+1. Create movie: `cd script/ && bash add_movie.sh`
+1. Fetch movies: `cd script/ && bash fetch_movies.sh`
+1. Edit movie: `cd script/ && bash edit_movie.sh`
+1. Delete movie: `cd script/ && bash delete_movie.sh`

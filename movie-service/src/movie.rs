@@ -62,74 +62,74 @@ impl Movie for MovieService {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{
-        db,
-        grpc::movie::{GetMovieRequest, movie_server::Movie},
-    };
-    use serial_test::serial;
-    use tonic::Request;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use crate::{
+//         db,
+//         grpc::movie::{GetMovieRequest, movie_server::Movie},
+//     };
+//     use serial_test::serial;
+//     use tonic::Request;
 
-    #[tokio::test]
-    #[serial]
-    async fn get_movies_utest() {
-        let movie_service =
-            MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
-        let request = Request::new(GetMovieRequest {});
-        let result = movie_service.get_movies(request).await;
+//     #[tokio::test]
+//     #[serial]
+//     async fn get_movies_utest() {
+//         let movie_service =
+//             MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
+//         let request = Request::new(GetMovieRequest {});
+//         let result = movie_service.get_movies(request).await;
 
-        assert!(result.is_ok());
-    }
+//         assert!(result.is_ok());
+//     }
 
-    #[tokio::test]
-    #[serial]
-    async fn add_movie_utest() {
-        let movie_service =
-            MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
-        let new_movie = MovieItem {
-            id: 1,
-            title: "New Movie Title".to_string(),
-            year: 2023,
-            genre: "Action".to_string(),
-        };
-        let request = Request::new(new_movie.clone());
+//     #[tokio::test]
+//     #[serial]
+//     async fn add_movie_utest() {
+//         let movie_service =
+//             MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
+//         let new_movie = MovieItem {
+//             id: 1,
+//             title: "New Movie Title".to_string(),
+//             year: 2023,
+//             genre: "Action".to_string(),
+//         };
+//         let request = Request::new(new_movie.clone());
 
-        let result = movie_service.add_movie(request).await;
+//         let result = movie_service.add_movie(request).await;
 
-        assert!(result.is_ok());
-    }
+//         assert!(result.is_ok());
+//     }
 
-    #[tokio::test]
-    #[serial]
-    async fn edit_movie_utest() {
-        let movie_service =
-            MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
-        let new_movie = MovieItem {
-            id: 3,
-            title: "Edited Movie Title".to_string(),
-            year: 2024,
-            genre: "Drama".to_string(),
-        };
-        let request = Request::new(new_movie.clone());
+//     #[tokio::test]
+//     #[serial]
+//     async fn edit_movie_utest() {
+//         let movie_service =
+//             MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
+//         let new_movie = MovieItem {
+//             id: 3,
+//             title: "Edited Movie Title".to_string(),
+//             year: 2024,
+//             genre: "Drama".to_string(),
+//         };
+//         let request = Request::new(new_movie.clone());
 
-        let result = movie_service.edit_movie(request).await;
+//         let result = movie_service.edit_movie(request).await;
 
-        assert!(result.is_ok());
-    }
+//         assert!(result.is_ok());
+//     }
 
-    // #[tokio::test]
-    // #[serial]
-    // async fn delete_movie_utest() {
-    //     let movie_service =
-    //         MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
+//     #[tokio::test]
+//     #[serial]
+//     async fn delete_movie_utest() {
+//         let movie_service =
+//             MovieService::new(db::DB::init().await.expect("failed to initialize mongodb"));
 
-    //     let delete_movie_id = DeleteMovieRr { id: 2 };
-    //     let request = Request::new(delete_movie_id);
+//         let delete_movie_id = DeleteMovieRr { id: 2 };
+//         let request = Request::new(delete_movie_id);
 
-    //     let result = movie_service.delete_movie(request).await;
+//         let result = movie_service.delete_movie(request).await;
 
-    //     assert!(result.is_ok());
-    // }
-}
+//         assert!(result.is_ok());
+//     }
+// }

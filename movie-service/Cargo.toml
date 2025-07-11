@@ -28,3 +28,7 @@ tonic-build = { version = "0.12", default-features = false, features = [
     "transport",
     "prost",
 ] }
+
+[[bin]]
+name = "movie-grpc-service"
+path = "bin/main.rs"

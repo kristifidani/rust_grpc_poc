@@ -29,6 +29,10 @@ tonic-build = { version = "0.12", default-features = false, features = [
     "prost",
 ] }
 
+[package.metadata.cargo-machete]
+# these are not used directly but are needed for the `Trait` implementations
+ignored = ["prost", "prost-types"]
+
 [[bin]]
 name = "movie-grpc-service"
 path = "bin/main.rs"

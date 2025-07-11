@@ -1,4 +1,4 @@
-use crate::config::{load_configuration, Config};
+use crate::config::{Config, load_configuration};
 use crate::grpc::movie::MovieItem;
 use tokio_postgres::{Client, NoTls};
 use tonic::Status;

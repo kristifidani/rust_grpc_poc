@@ -1,25 +1,17 @@
-[package]
-name = "rust-grpc-poc"
+[workspace]
+members = ["movie-service"]
+
+# The resolver is a global setting for a workspace, and the setting is ignored
+# in dependencies. The setting is only honored for the top-level package of the
+# workspace. Given that we are using a workspace, we need to explicitly set the
+# resolver field if we want to opt-in to the new resolver.
+resolver = "2"
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 authors = ["Kristi Fidani"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-prost = { version = "0.13", default-features = false }
-prost-types = { version = "0.13", default-features = false }
-tokio = { version = "1.32", features = ["macros", "rt-multi-thread"] }
-tonic = { version = "0.12", default-features = false, features = [
-    "transport",
-    "codegen",
-    "prost",
-] }
+[workspace.dependencies]
 dotenv = { version = "0.14", default-features = false }
-tokio-postgres = "0.7.10"
-
-[build-dependencies]
-tonic-build = { version = "0.12", default-features = false, features = [
-    "transport",
-    "prost",
-] }
+tokio = { version = "1.32", features = ["macros", "rt-multi-thread"] }

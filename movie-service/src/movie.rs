@@ -1,7 +1,7 @@
 use crate::db::DB;
 use crate::grpc::movie::{
-    movie_server::Movie, DeleteMovieRr, EditMovieResponse, GetMovieRequest, GetMovieResponse,
-    MovieItem,
+    DeleteMovieRr, EditMovieResponse, GetMovieRequest, GetMovieResponse, MovieItem,
+    movie_server::Movie,
 };
 use tonic::{Request, Response, Status};
 
@@ -67,7 +67,7 @@ mod tests {
     use super::*;
     use crate::{
         db,
-        grpc::movie::{movie_server::Movie, GetMovieRequest},
+        grpc::movie::{GetMovieRequest, movie_server::Movie},
     };
     use tonic::Request;
 

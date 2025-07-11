@@ -1,0 +1,30 @@
+[package]
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+name = "movie-grpc-service"
+description = "A gRPC service for managing movies"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# unique deps
+prost = { version = "0.13", default-features = false }
+prost-types = { version = "0.13", default-features = false }
+tonic = { version = "0.12", default-features = false, features = [
+    "transport",
+    "codegen",
+    "prost",
+] }
+tokio-postgres = "0.7.10"
+
+# workspace deps
+dotenv = { workspace = true }
+tokio = { workspace = true }
+
+[build-dependencies]
+tonic-build = { version = "0.12", default-features = false, features = [
+    "transport",
+    "prost",
+] }

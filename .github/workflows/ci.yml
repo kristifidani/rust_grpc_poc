@@ -75,16 +75,20 @@ jobs:
           rustup component add clippy
           cargo clippy --all-targets --all-features --color always -- -D warnings
 
-  # unit-tests-coverage:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: dtolnay/rust-toolchain@stable
-  #     - name: Install Protoc
-  #       uses: arduino/setup-protoc@v3
-  #       with:
-  #         version: "21.12"
-  #         repo-token: ${{ secrets.GITHUB_TOKEN }}
+  integration-tests-coverage:
+    runs-on: ubuntu-latest
+    env:
+      DB_URL: "postgres://postgres:password@localhost:5432/postgres"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "21.12"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - name: Run unit tests
-  #       run: cargo test --lib -- --show-output
+      - name: Run integration tests
+        run: |
+          cargo test --test init_db -- --show-output
+          cargo test --test integration_tests -- --show-output

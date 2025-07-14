@@ -4,7 +4,7 @@ use tokio_postgres::NoTls;
 
 #[tokio::test]
 async fn test_initialize_and_populate_db() {
-    dotenvy::dotenv().unwrap();
+    dotenvy::dotenv().ok();
 
     // Connect to the database
     let db_connection_string = env::var("DB_URL").expect("DB_URL must be set");

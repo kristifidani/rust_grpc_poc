@@ -7,7 +7,8 @@ use tonic::transport::Server;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenvy::dotenv().unwrap();
+    dotenvy::dotenv().ok();
+
     let db_connection_string = env::var("DB_URL").expect("DB_URL must be set");
     let db = MovieRepo::init(&db_connection_string).await?;
 

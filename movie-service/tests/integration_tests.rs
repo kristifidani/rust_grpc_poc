@@ -15,7 +15,7 @@ use tonic::{
 use tower::service_fn;
 
 async fn init_movie_service() -> MovieClient<Channel> {
-    dotenvy::dotenv().unwrap();
+    dotenvy::dotenv().ok();
 
     // clients
     let (client, server) = tokio::io::duplex(1024);

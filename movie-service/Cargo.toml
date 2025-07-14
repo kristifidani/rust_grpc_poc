@@ -22,12 +22,21 @@ tokio-postgres = "0.7.10"
 # workspace deps
 dotenvy = { workspace = true }
 tokio = { workspace = true }
+async-trait = { workspace = true }
+mockall = { workspace = true }
+uuid = { workspace = true }
 
 [build-dependencies]
 tonic-build = { version = "0.12", default-features = false, features = [
     "transport",
     "prost",
 ] }
+
+[dev-dependencies]
+tokio-stream = { version = "0.1.14", default-features = false }
+hyper-util = { version = "0.1.10", features = ["tokio"] }
+tower = { version = "0.5", default-features = false }
+
 
 [package.metadata.cargo-machete]
 # these are not used directly but are needed for the `Trait` implementations

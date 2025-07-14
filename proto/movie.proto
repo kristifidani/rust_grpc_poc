@@ -1,31 +1,27 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 package movie;
 
 message MovieItem {
-  int32 id = 1;
+  string index = 1;
   string title = 2;
   int32 year = 3;
   string genre = 4;
 }
 
-message GetMovieRequest {
+message GetMoviesResponse { repeated MovieItem movies = 1; }
+
+message AddMovieRequest {
+  string title = 2;
+  int32 year = 3;
+  string genre = 4;
 }
 
-message GetMovieResponse {
-  repeated MovieItem movies = 1;
-}
-
-message EditMovieResponse {
-  MovieItem movie = 1;
-}
-
-message DeleteMovieRR{
-  int32 id = 1;
-}
+message DeleteMovieRequest { string index = 1; }
 
 service Movie {
-  rpc GetMovies (GetMovieRequest) returns (GetMovieResponse);
-  rpc AddMovie (MovieItem) returns (GetMovieResponse);
-  rpc EditMovie (MovieItem) returns (EditMovieResponse);
-  rpc DeleteMovie (DeleteMovieRR) returns (DeleteMovieRR);
+  rpc GetMovies(google.protobuf.Empty) returns (GetMoviesResponse);
+  rpc AddMovie(AddMovieRequest) returns (google.protobuf.Empty);
+  rpc EditMovie(MovieItem) returns (google.protobuf.Empty);
+  rpc DeleteMovie(DeleteMovieRequest) returns (google.protobuf.Empty);
 }

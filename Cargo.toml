@@ -17,3 +17,4 @@ dotenvy = { version = "0.15", default-features = false }
 tokio = { version = "1.32", features = ["macros", "rt-multi-thread"] }
 async-trait = "0.1.88"
 mockall = { version = "0.13", default-features = false }
+uuid = { version = "1.5", features = ["v4"] }

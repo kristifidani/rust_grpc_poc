@@ -1,19 +1,16 @@
-use crate::grpc::movie::MovieItem;
+use crate::types::dtos::{DB_NAME, MovieEntity};
 use tokio_postgres::{Client, NoTls};
 use tonic::Status;
 
-const DB_NAME: &str = "movies";
-
-#[cfg_attr(feature = "mock", mockall::automock)]
+#[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
 pub trait MovieRepoImpl: Send + Sync + 'static {
-    async fn fetch_movies(&self) -> Result<Vec<MovieItem>, Status>;
-    async fn create_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status>;
-    async fn update_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status>;
-    async fn delete_movie(&self, id: i32) -> Result<i32, Status>;
+    async fn fetch_movies(&self) -> Result<Vec<MovieEntity>, Status>;
+    async fn create_movie(&self, movie: &MovieEntity) -> Result<(), Status>;
+    async fn update_movie(&self, movie: &MovieEntity) -> Result<(), Status>;
+    async fn delete_movie(&self, id: String) -> Result<(), Status>;
 }
 
-#[derive(Debug)]
 pub struct MovieRepo {
     client: Client,
 }
@@ -50,11 +47,11 @@ impl MovieRepo {
     async fn create_database(client: &Client) -> Result<(), Status> {
         let create_table_sql = format!(
             "CREATE TABLE IF NOT EXISTS {} (
-              id SERIAL PRIMARY KEY,
-              title TEXT NOT NULL,
-              year INT NOT NULL,
-              genre TEXT NOT NULL
-          )",
+            index TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            year INT NOT NULL,
+            genre TEXT NOT NULL
+        )",
             DB_NAME
         );
 
@@ -72,7 +69,7 @@ impl MovieRepo {
 
 #[async_trait::async_trait]
 impl MovieRepoImpl for MovieRepo {
-    async fn fetch_movies(&self) -> Result<Vec<MovieItem>, Status> {
+    async fn fetch_movies(&self) -> Result<Vec<MovieEntity>, Status> {
         let query = format!("SELECT * FROM {}", DB_NAME);
         let rows = self
             .client
@@ -83,8 +80,8 @@ impl MovieRepoImpl for MovieRepo {
         let mut movies = Vec::new();
 
         for row in &rows {
-            let movie = MovieItem {
-                id: row.get("id"),
+            let movie = MovieEntity {
+                index: row.get("index"),
                 title: row.get("title"),
                 year: row.get("year"),
                 genre: row.get("genre"),
@@ -95,76 +92,67 @@ impl MovieRepoImpl for MovieRepo {
         Ok(movies)
     }
 
-    async fn create_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status> {
-        let statement = self.client
-          .prepare(&format!(
-              "INSERT INTO {} (title, year, genre) VALUES ($1, $2, $3) RETURNING id, title, year, genre",
-              DB_NAME
-          ))
-          .await
-          .map_err(|db_error| {
-              Status::internal(format!(
-                  "failed to prepare INSERT statement: {:?}",
-                  db_error
-              ))
-          })?;
-
-        let inserted_row = self
+    async fn create_movie(&self, movie: &MovieEntity) -> Result<(), Status> {
+        let statement = self
             .client
-            .query_one(&statement, &[&movie.title, &movie.year, &movie.genre])
+            .prepare(&format!(
+                "INSERT INTO {} (index, title, year, genre) VALUES ($1, $2, $3, $4)",
+                DB_NAME
+            ))
+            .await
+            .map_err(|db_error| {
+                Status::internal(format!(
+                    "failed to prepare INSERT statement: {:?}",
+                    db_error
+                ))
+            })?;
+
+        self.client
+            .execute(
+                &statement,
+                &[&movie.index, &movie.title, &movie.year, &movie.genre],
+            )
             .await
             .map_err(|db_error| {
                 Status::internal(format!("failed to insert movie: {:?}", db_error))
             })?;
 
-        Ok(MovieItem {
-            id: inserted_row.get("id"),
-            title: inserted_row.get("title"),
-            year: inserted_row.get("year"),
-            genre: inserted_row.get("genre"),
-        })
+        Ok(())
     }
 
-    async fn update_movie(&self, movie: &MovieItem) -> Result<MovieItem, Status> {
-        let statement = self.client
-          .prepare(&format!(
-              "UPDATE {} SET title = $1, year = $2, genre = $3 WHERE id = $4 RETURNING id, title, year, genre",
-              DB_NAME
-          ))
-          .await
-          .map_err(|db_error| {
-              Status::internal(format!(
-                  "failed to prepare UPDATE statement: {:?}",
-                  db_error
-              ))
-          })?;
-
-        let updated_row = self
+    async fn update_movie(&self, movie: &MovieEntity) -> Result<(), Status> {
+        let statement = self
             .client
-            .query_one(
+            .prepare(&format!(
+                "UPDATE {} SET title = $1, year = $2, genre = $3 WHERE index = $4",
+                DB_NAME
+            ))
+            .await
+            .map_err(|db_error| {
+                Status::internal(format!(
+                    "failed to prepare UPDATE statement: {:?}",
+                    db_error
+                ))
+            })?;
+
+        let _updated_row = self
+            .client
+            .execute(
                 &statement,
-                &[&movie.title, &movie.year, &movie.genre, &movie.id],
+                &[&movie.title, &movie.year, &movie.genre, &movie.index],
             )
             .await
             .map_err(|db_error| {
                 Status::internal(format!("failed to update movie: {:?}", db_error))
             })?;
 
-        Ok(MovieItem {
-            id: updated_row.get("id"),
-            title: updated_row.get("title"),
-            year: updated_row.get("year"),
-            genre: updated_row.get("genre"),
-        })
+        Ok(())
     }
 
-    async fn delete_movie(&self, id: i32) -> Result<i32, Status> {
+    async fn delete_movie(&self, index: String) -> Result<(), Status> {
         let statement = self
             .client
-            .prepare(&format!(
-                "DELETE FROM {} WHERE id = $1 RETURNING id",
-                DB_NAME
-            ))
+            .prepare(&format!("DELETE FROM {} WHERE index = $1", DB_NAME))
             .await
             .map_err(|db_error| {
                 Status::internal(format!(
@@ -173,14 +161,14 @@ impl MovieRepoImpl for MovieRepo {
                 ))
             })?;
 
-        let deleted_row = self
-            .client
-            .query_one(&statement, &[&id])
-            .await
-            .map_err(|db_error| {
-                Status::internal(format!("failed to delete movie: {:?}", db_error))
-            })?;
+        let _deleted_row =
+            self.client
+                .execute(&statement, &[&index])
+                .await
+                .map_err(|db_error| {
+                    Status::internal(format!("failed to delete movie: {:?}", db_error))
+                })?;
 
-        Ok(deleted_row.get("id"))
+        Ok(())
     }
 }

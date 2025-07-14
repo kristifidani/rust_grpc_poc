@@ -688,13 +688,17 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "dotenvy",
+ "hyper-util",
  "mockall",
  "prost",
  "prost-types",
  "tokio",
  "tokio-postgres",
+ "tokio-stream",
  "tonic",
  "tonic-build",
+ "tower 0.5.2",
+ "uuid",
 ]
 
 [[package]]
@@ -1452,6 +1456,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e70f2a8b45122e719eb623c01822704c4e0907e7e426a05927e1a1cfff5b75d0"
 
 [[package]]
+name = "uuid"
+version = "1.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3cf4199d1e5d15ddd86a694e4d0dffa9c323ce759fea589f00fef9d81cc1931d"
+dependencies = [
+ "getrandom 0.3.3",
+ "js-sys",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1495,6 +1510,7 @@ checksum = "1edc8929d7499fc4e8f0be2262a241556cfc54a0bea223790e71446f2aab1ef5"
 dependencies = [
  "cfg-if",
  "once_cell",
+ "rustversion",
  "wasm-bindgen-macro",
 ]
 

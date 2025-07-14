@@ -8,11 +8,6 @@ description = "A gRPC service for managing movies"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[features]
-default = [] # empty by default
-# enable mocking of traits
-mock = ["dep:mockall"]
-
 [dependencies]
 # unique deps
 prost = { version = "0.13", default-features = false }
@@ -28,13 +23,20 @@ tokio-postgres = "0.7.10"
 dotenvy = { workspace = true }
 tokio = { workspace = true }
 async-trait = { workspace = true }
-mockall = { workspace = true, optional = true }
+mockall = { workspace = true }
+uuid = { workspace = true }
 
 [build-dependencies]
 tonic-build = { version = "0.12", default-features = false, features = [
     "transport",
     "prost",
 ] }
+
+[dev-dependencies]
+tokio-stream = { version = "0.1.14", default-features = false }
+hyper-util = { version = "0.1.10", features = ["tokio"] }
+tower = { version = "0.5", default-features = false }
+
 
 [package.metadata.cargo-machete]
 # these are not used directly but are needed for the `Trait` implementations

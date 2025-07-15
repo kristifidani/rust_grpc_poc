@@ -1,10 +1,10 @@
-# GRPC RUST API
+# Rust gRPC API PoC
 
 ### Introduction
 
-This Rust project showcases the use of **gRPC** to build an API for movie services. It defines a gRPC service for retrieving a list of movies, creating a movie, deleting and updating movies. Also it includes sample implementations for these services.
+This project is intented as a PoC to showcases the use of **gRPC** API in **Rust**. It defines a gRPC service with CRUD operation for movies. 
 
-## Prerequisites
+### Prerequisites
 
 Before you begin, ensure you have met the following requirements:
 
@@ -16,14 +16,20 @@ Before you begin, ensure you have met the following requirements:
 - Build the project: `cargo build`
 - Run the project: `cargo run`
 
-Make sure you have set the `.env` variables:
-* DB_URL=`postgres://postgres:postgres@localhost:5432/postgres`
+_Before running_:
+ * Run the **PostgresDb** container: `docker-compose up -d`
+ * Make sure you have set the `.env` variables:  
+ DB_URL=`postgres://postgres:postgres@localhost:5432/postgres`
 
-### Usage
+### Testing
 
-1. Start docker containers: `docker-compose up -d`
-1. Run the project: `cargo run`
-1. Create movie: `cd script/ && bash add_movie.sh`
-1. Fetch movies: `cd script/ && bash fetch_movies.sh`
-1. Edit movie: `cd script/ && bash edit_movie.sh`
-1. Delete movie: `cd script/ && bash delete_movie.sh`
+* Run _unit tests_: `make unit-tests`
+* Run _integration tests_: `make integration-tests`  
+
+Alternatively you can execute some scripts:  
+1. Navigate to the scripts directory: `cd ./scripts`
+1. Then you can execute the following scripts:  
+    * _Fetch movies_: `bash fetch_movies.sh` 
+    * _Add movie_: `bash add_movie.sh`
+    * _Edit movie_: `bash edit_movie.sh`
+    * _Delete movie_: `bash delete_movie.sh`

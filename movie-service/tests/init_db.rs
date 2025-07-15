@@ -36,6 +36,13 @@ async fn test_initialize_and_populate_db() {
         .await
         .expect("Failed to create table");
 
+    // Clean the table first
+    let delete_sql = format!("DELETE FROM {}", DB_NAME);
+    client
+        .execute(&delete_sql, &[])
+        .await
+        .expect("Failed to clear table before test");
+
     // Insert two movies
     let insert_sql = format!(
         "INSERT INTO {} (index, title, year, genre) VALUES ($1, $2, $3, $4)",

@@ -1,13 +1,15 @@
-use crate::types::dtos::{DB_NAME, MovieEntity};
+use crate::types::grpc::movie::MovieItem;
 use tokio_postgres::{Client, NoTls};
 use tonic::Status;
+
+pub const DB_NAME: &str = "movies";
 
 #[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
 pub trait MovieRepoImpl: Send + Sync + 'static {
-    async fn fetch_movies(&self) -> Result<Vec<MovieEntity>, Status>;
-    async fn create_movie(&self, movie: &MovieEntity) -> Result<(), Status>;
-    async fn update_movie(&self, movie: &MovieEntity) -> Result<(), Status>;
+    async fn fetch_movies(&self) -> Result<Vec<MovieItem>, Status>;
+    async fn create_movie(&self, movie: &MovieItem) -> Result<(), Status>;
+    async fn update_movie(&self, movie: &MovieItem) -> Result<(), Status>;
     async fn delete_movie(&self, id: String) -> Result<(), Status>;
 }
 
@@ -69,7 +71,7 @@ impl MovieRepo {
 
 #[async_trait::async_trait]
 impl MovieRepoImpl for MovieRepo {
-    async fn fetch_movies(&self) -> Result<Vec<MovieEntity>, Status> {
+    async fn fetch_movies(&self) -> Result<Vec<MovieItem>, Status> {
         let query = format!("SELECT * FROM {}", DB_NAME);
         let rows = self
             .client
@@ -80,7 +82,7 @@ impl MovieRepoImpl for MovieRepo {
         let mut movies = Vec::new();
 
         for row in &rows {
-            let movie = MovieEntity {
+            let movie = MovieItem {
                 index: row.get("index"),
                 title: row.get("title"),
                 year: row.get("year"),
@@ -92,7 +94,7 @@ impl MovieRepoImpl for MovieRepo {
         Ok(movies)
     }
 
-    async fn create_movie(&self, movie: &MovieEntity) -> Result<(), Status> {
+    async fn create_movie(&self, movie: &MovieItem) -> Result<(), Status> {
         let statement = self
             .client
             .prepare(&format!(
@@ -120,7 +122,7 @@ impl MovieRepoImpl for MovieRepo {
         Ok(())
     }
 
-    async fn update_movie(&self, movie: &MovieEntity) -> Result<(), Status> {
+    async fn update_movie(&self, movie: &MovieItem) -> Result<(), Status> {
         let statement = self
             .client
             .prepare(&format!(

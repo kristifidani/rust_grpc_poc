@@ -1,4 +1,4 @@
-use movie_grpc_service::types::dtos::DB_NAME;
+use movie_grpc_service::db::DB_NAME;
 use std::env;
 use tokio_postgres::NoTls;
 

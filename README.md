@@ -2,7 +2,7 @@
 
 ### Introduction
 
-This project is intented as a PoC to showcases the use of **gRPC** API in **Rust**. It defines a gRPC service with CRUD operation for movies. 
+This project is a PoC to showcase the implementation of a **gRPC** API service with **Rust**. The movie services implements basic CRUD operation with `unit-tests` and `integration tests`. 
 
 ### Prerequisites
 
